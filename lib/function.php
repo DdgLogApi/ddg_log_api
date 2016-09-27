@@ -7,8 +7,8 @@
 require_once realpath(dirname(__FILE__) . '/../Log_Autoload.php');
 
 function putLogs(Aliyun_Log_Client $client, $project, $logstore, $data) {
-    $topic = $data['title'];
-    unset($data['title']);
+    $topic = $data['topic'];
+//    unset($data['title']);
     $contents =$data;
     $logItem = new Aliyun_Log_Models_LogItem();
     $logItem->setTime(time());
@@ -54,12 +54,12 @@ function listTopics(Aliyun_Log_Client $client, $project, $logstore) {
 }
 
 function getLogs(Aliyun_Log_Client $client, $project, $logstore,$data) {
-//    $topic = 'TestTopic';
-    $topic = $data['title'];
-    $from = time()-3600*2;
-    $to = time();
-    $request = new Aliyun_Log_Models_GetLogsRequest($project, $logstore, $from, $to, $topic, '', 100, 0, False);
-    
+    $topic = 'interface_log';
+    $from = $data['start_time']?$data['start_time']:time()-3600*24*6;
+    $to =  $data['end_time']? $data['end_time']:time();
+    $query=$data['title']?'title='.$data['title']:'';
+    $offset = $data['curpage']?$data['curpage']*10-1:0;
+    $request = new Aliyun_Log_Models_GetLogsRequest($project, $logstore, $from, $to, $topic,$query, 10, $offset, False);
     try {
         $response = $client->getLogs($request);
 //        foreach($response -> getLogs() as $log)
@@ -73,7 +73,7 @@ function getLogs(Aliyun_Log_Client $client, $project, $logstore,$data) {
         foreach ($response->getLogs() as $k=> $log){
             foreach ($log->getContents() as $key => $value) {
                 $tmp [$k][$key] = $value;
-                $tmp [$k]['add_time'] = $log->getTime();
+                $tmp [$k]['add_time'] = date('Y-m-d H:i:s',$log->getTime());
             }
         }
        return $tmp;
@@ -267,7 +267,62 @@ function output_error($message, $extend_data = array(), $code = 80002) {
 function check_request_parameter($check_param){
     foreach($check_param as $value) {
         if (!isset($_REQUEST[$value])) output_error('缺少参数'.$value, array(), ERROR_CODE_ARG);
+        if (empty($_REQUEST[$value])) output_error('为空'.$value, array(), ERROR_CODE_ARG);
     }
+}
+
+/**
+ * Loads the main config.php file
+ *
+ * This function lets us grab the config file even if the Config class
+ * hasn't been instantiated yet
+ *
+ * @param	array
+ * @return	array
+ */
+function get_config()
+{
+    static $config;
+
+    if (empty($config))
+    {
+        $file_path = realpath(dirname(__FILE__) . '/../config.ini.php');
+      
+        $found = FALSE;
+        if (file_exists($file_path))
+        {
+            $found = TRUE;
+            require($file_path);
+        }
+
+        // Is the config file in the environment folder?
+        if (file_exists($file_path = APPPATH.'config/'.ENVIRONMENT.'/config.php'))
+        {
+            require($file_path);
+        }
+        elseif ( ! $found)
+        {
+            set_status_header(503);
+            echo 'The configuration file does not exist.';
+            exit(3); // EXIT_CONFIG
+        }
+
+        // Does the $config array exist in the file?
+        if ( ! isset($config) OR ! is_array($config))
+        {
+            set_status_header(503);
+            echo 'Your config file does not appear to be formatted correctly.';
+            exit(3); // EXIT_CONFIG
+        }
+    }
+
+    // Are any values being dynamically added or replaced?
+    foreach ($replace as $key => $val)
+    {
+        $config[$key] = $val;
+    }
+
+    return $config;
 }
 //$endpoint = '<log service endpoint';
 //$accessKeyId = 'your access key id';
@@ -286,5 +341,4 @@ function check_request_parameter($check_param){
 //batchGetLogs($client,$project,$logstore);
 //listLogstores($client, $project);
 //listTopics($client, $project, $logstore);
-//getHistograms($client, $project, $logstore);
-//getLogs($client, $project, $logstore);
+//getHistograms($client, $project, $logst 

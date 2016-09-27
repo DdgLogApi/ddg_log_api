@@ -6,6 +6,8 @@
 
  require_once realpath(dirname(__FILE__) . '/Log_Autoload.php');
  require_once  realpath(dirname(__FILE__) . '/lib/function.php');
+ require_once realpath(dirname(__FILE__) . '/global.php');
+ require_once realpath(dirname(__FILE__) . '/config.ini.php');
 
 	/*
 	 * type 1:插入阿里云日志后台;2:查询日志
@@ -20,29 +22,50 @@
 	$data = array(
 		'member_id'      => $_REQUEST['member_id'],
 		'title'          => $_REQUEST['title'],
+		'curpage'        => $_REQUEST['curpage'],
 		'context'        => $_REQUEST['context'],
 		'url'            => $_REQUEST['url'],
 		'remark'         => $_REQUEST['remark'],
+		'start_time'     => $_REQUEST['start_time'],
+		'end_time'       => $_REQUEST['end_time'],
+		'topic'          => 'interface_log',
 	);
 	switch($type){
 		case 1;
 			$function  = 'putLogs';
 			break;
 		case 2;
-//			$list  = getLogs($client, $project, $logstore);
 			$function  = 'getLogs';
+			break;
+		case 3;
+			$function  = 'putLogs';
 			break;
 		default;
 			$type;
 			break;
 	}
+	if($type==3){
+		for($i=1;$i<=2135;$i++){
+			$url='http://shop.aigegou.com/agg/mobile/index.php?act=bug_log&op=get_wx_bug_log&page='.$i;
+			$html = file_get_contents($url);
+			$all_datas = json_decode($html,1)['datas']['log_list'];
 
-//	print_r(strstr($_REQUEST['start_time'],'-'));die;
-	$check_param = array('type','title');
-	check_request_parameter($check_param);
-	if($_REQUEST['title']==''){
-		output_error('Title can not be null');
+			foreach($all_datas as $value){
+				$value['context'] = htmlspecialchars_decode($value['context']);
+				$value['topic'] = 'interface_log';
+				$list  = $function($client, $project, $logstore,$value);
+			}
+		}
+		output_data([]);
 	}
+
+
+//print_r($type);die;
+print_r(get_config('shop_site_url'));die;
+//	print_r(strstr($_REQUEST['start_time'],'-'));die;
+//	$check_param = array('type','title');
+//	check_request_parameter($check_param);
+
 	if($_REQUEST['key']!=$accessKeyId || $type==''){
 		output_error('No permissions');
 	}
