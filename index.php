@@ -61,7 +61,7 @@
 
 
 //print_r($type);die;
-print_r(get_config('shop_site_url'));die;
+//print_r(get_config('shop_site_url'));die;
 //	print_r(strstr($_REQUEST['start_time'],'-'));die;
 //	$check_param = array('type','title');
 //	check_request_parameter($check_param);
