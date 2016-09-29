@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Copyright (C) Alibaba Cloud Computing
  * All rights reserved
@@ -53,12 +53,12 @@ function listTopics(Aliyun_Log_Client $client, $project, $logstore) {
     }
 }
 
-function getLogs(Aliyun_Log_Client $client, $project, $logstore,$data) {
-    $topic = 'interface_log';
-    $from = $data['start_time']?$data['start_time']:time()-3600*24*6;
-    $to =  $data['end_time']? $data['end_time']:time();
-    $query=$data['title']?'title='.$data['title']:'';
+function getLogs(Aliyun_Log_Client $client, $project, $logstore,$data,$query) {
+    $topic = 'ddg_error_log';
+    $from =time()-3600*24*6;
+    $to =  time();
     $offset = $data['curpage']?$data['curpage']*10-1:0;
+
     $request = new Aliyun_Log_Models_GetLogsRequest($project, $logstore, $from, $to, $topic,$query, 10, $offset, False);
     try {
         $response = $client->getLogs($request);
@@ -341,4 +341,4 @@ function get_config()
 //batchGetLogs($client,$project,$logstore);
 //listLogstores($client, $project);
 //listTopics($client, $project, $logstore);
-//getHistograms($client, $project, $logst 
+//getHistograms($client, $project, $logst ent, $project, $logst stograms($client, $project, $logst 
